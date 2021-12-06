@@ -257,6 +257,26 @@ public class PostgresSource extends AbstractJdbcSource implements Source {
     return stream;
   }
 
+  @Oeride Set<
+  @Overide
+  public Set<CommonField<JDBCType>> getUnaccessibleTables(JdbcDatabase database, String schema) throws Exception {
+    Set<CommonField<JDBCType>> unaccessibleTables = tablesdatabase.bufferedResultSetQuery(
+        conn -> conn.getMetaData().getTablePrivileges(getCatalog(database), schema, null, null),
+        resultSet -> Jsons.jsonNode(ImmutableMap.<String, Object>builder()
+            .put(INTERNAL_SCHEMA_NAME,
+                resultSet.getObject(JDBC_COLUMN_SCHEMA_NAME) != null ? resultSet.getString(JDBC_COLUMN_SCHEMA_NAME)
+                    : resultSet.getObject(JDBC_COLUMN_DATABASE_NAME))
+            .put(INTERNAL_TABLE_NAME, resultSet.getString(JDBC_COLUMN_TABLE_NAME))
+            .put(INTERNAL_PRIVILEGE, resultSet.getString(PRIVILEGE))
+            .build()))
+        .stream()
+        .filter(t -> !t.get(INTERNAL_PRIVILEGE).asText().equals("SELECT"))
+        t -> !unaccessibleTables.contains(t.get(INTERNAL_TABLE_NAME).asText()))
+        .collect(Collectors.toSet());
+
+    return unaccessibleTables;
+  }
+
   public static void main(final String[] args) throws Exception {
     final Source source = PostgresSource.sshWrappedSource();
     LOGGER.info("starting source: {}", PostgresSource.class);

@@ -112,6 +112,7 @@ public abstract class AbstractJdbcSource extends AbstractRelationalDbSource<JDBC
   @Override
   protected List<TableInfo<CommonField<JDBCType>>> discoverInternal(final JdbcDatabase database, final String schema) throws Exception {
     final Set<String> internalSchemas = new HashSet<>(getExcludedInternalNameSpaces());
+    final Set<String> unaccessibleTables = new HashSet<>(getUnaccessibleTables(database, schema));
     return database.bufferedResultSetQuery(
         conn -> conn.getMetaData().getColumns(getCatalog(database), schema, null, null),
         resultSet -> Jsons.jsonNode(ImmutableMap.<String, Object>builder()
@@ -125,6 +126,7 @@ public abstract class AbstractJdbcSource extends AbstractRelationalDbSource<JDBC
             .build()))
         .stream()
         .filter(t -> !internalSchemas.contains(t.get(INTERNAL_SCHEMA_NAME).asText()))
+        .filter (t -> !unaccessibleTables.contains(t.get(INTERNAL_TABLE_NAME).asText()))
         // group by schema and table name to handle the case where a table with the same name exists in
         // multiple schemas.
         .collect(Collectors.groupingBy(t -> ImmutablePair.of(t.get(INTERNAL_SCHEMA_NAME).asText(), t.get(INTERNAL_TABLE_NAME).asText())))
