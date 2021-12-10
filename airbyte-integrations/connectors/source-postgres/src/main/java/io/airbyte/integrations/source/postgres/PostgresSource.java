@@ -277,8 +277,8 @@ public class PostgresSource extends AbstractJdbcSource implements Source {
             .put(INTERNAL_PRIVILEGE, resultSet.getString(PRIVILEGE))
             .build()))
         .stream()
-        .filter(t -> !t.get(INTERNAL_PRIVILEGE).asText().equals("SELECT"))
-        .collect(Collectors.toList());
+        .filter(t -> !("SELECT".equals(t.get(INTERNAL_PRIVILEGE).asText())))
+        .collect(toList());
         for (Object o: unaccessibleTablesList) {
           unaccessibleTables.add(o.toString());
         }
