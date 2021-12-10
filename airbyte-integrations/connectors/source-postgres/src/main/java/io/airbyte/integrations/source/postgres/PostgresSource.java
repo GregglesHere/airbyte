@@ -267,6 +267,17 @@ public class PostgresSource extends AbstractJdbcSource implements Source {
     return stream;
   }
 
+  /**
+   * Returns a set of table names as strings that the user does not have access 
+   * to in the database. Querying a table that is unaccessible causes a runtime error.
+   * 
+   * @author gaf3
+   * @param database
+   * @param schema
+   * @return 
+   * 
+   * CS427 Issue link: https://github.com/airbytehq/airbyte/issues/5172
+   */
   @Override
   public Set<String> getUnaccessibleTables(JdbcDatabase database, String schema) throws Exception {
     Set<String> unaccessibleTables = new HashSet<String>(); 

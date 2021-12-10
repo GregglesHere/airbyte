@@ -69,6 +69,7 @@ public abstract class AbstractRelationalDbSource<DataType, Database extends SqlD
     });
   }
 
+  // CS427 Issue link: https://github.com/airbytehq/airbyte/issues/5172
   protected Set<String> getUnaccessibleTables(JdbcDatabase database, String schema) throws Exception{
     return Set.of();
   }

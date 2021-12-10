@@ -166,6 +166,7 @@ public abstract class AbstractJdbcSource extends AbstractRelationalDbSource<JDBC
     return sourceOperations.getType(columnType);
   }
 
+  // CS427 Issue link: https://github.com/airbytehq/airbyte/issues/5172
   @Override
   protected Map<String, List<String>> discoverPrimaryKeys(final JdbcDatabase database,
                                                           final List<TableInfo<CommonField<JDBCType>>> tableInfos) {
