@@ -6,6 +6,7 @@ package io.airbyte.integrations.source.postgres;
 
 import static io.airbyte.integrations.debezium.internals.DebeziumEventUtils.CDC_DELETED_AT;
 import static io.airbyte.integrations.debezium.internals.DebeziumEventUtils.CDC_UPDATED_AT;
+import java.util.stream.Collectors;
 import static java.util.stream.Collectors.toList;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -37,6 +38,7 @@ import java.sql.JDBCType;
 import java.sql.PreparedStatement;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,6 +49,14 @@ public class PostgresSource extends AbstractJdbcSource implements Source {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PostgresSource.class);
   public static final String CDC_LSN = "_ab_cdc_lsn";
+
+  private static final String JDBC_COLUMN_SCHEMA_NAME = "TABLE_SCHEM";
+  private static final String JDBC_COLUMN_TABLE_NAME = "TABLE_NAME";
+  private static final String PRIVILEGE = "PRIVILEGE";
+
+  private static final String INTERNAL_SCHEMA_NAME = "schemaName";
+  private static final String INTERNAL_TABLE_NAME = "tableName";
+  private static final String INTERNAL_PRIVILEGE = "privilege";
 
   static final String DRIVER_CLASS = "org.postgresql.Driver";
 
@@ -257,25 +267,24 @@ public class PostgresSource extends AbstractJdbcSource implements Source {
     return stream;
   }
 
-  @Oeride Set<
-  @Overide
-  public Set<CommonField<JDBCType>> getUnaccessibleTables(JdbcDatabase database, String schema) throws Exception {
-    Set<CommonField<JDBCType>> unaccessibleTables = tablesdatabase.bufferedResultSetQuery(
-        conn -> conn.getMetaData().getTablePrivileges(getCatalog(database), schema, null, null),
-        resultSet -> Jsons.jsonNode(ImmutableMap.<String, Object>builder()
-            .put(INTERNAL_SCHEMA_NAME,
-                resultSet.getObject(JDBC_COLUMN_SCHEMA_NAME) != null ? resultSet.getString(JDBC_COLUMN_SCHEMA_NAME)
-                    : resultSet.getObject(JDBC_COLUMN_DATABASE_NAME))
+  @Override
+  public Set<String> getUnaccessibleTables(JdbcDatabase database, String schema) throws Exception {
+    Set<String> unaccessibleTables = new HashSet<String>(); 
+        List<Object> unaccessibleTablesList = database.bufferedResultSetQuery(
+          conn-> conn.getMetaData().getTablePrivileges(getCatalog(database), schema, null),
+          resultSet -> Jsons.jsonNode(ImmutableMap.<String, Object>builder()
             .put(INTERNAL_TABLE_NAME, resultSet.getString(JDBC_COLUMN_TABLE_NAME))
             .put(INTERNAL_PRIVILEGE, resultSet.getString(PRIVILEGE))
             .build()))
         .stream()
         .filter(t -> !t.get(INTERNAL_PRIVILEGE).asText().equals("SELECT"))
-        t -> !unaccessibleTables.contains(t.get(INTERNAL_TABLE_NAME).asText()))
-        .collect(Collectors.toSet());
-
-    return unaccessibleTables;
+        .collect(Collectors.toList());
+        for (Object o: unaccessibleTablesList) {
+          unaccessibleTables.add(o.toString());
+        }
+        return unaccessibleTables;
   }
+  
 
   public static void main(final String[] args) throws Exception {
     final Source source = PostgresSource.sshWrappedSource();

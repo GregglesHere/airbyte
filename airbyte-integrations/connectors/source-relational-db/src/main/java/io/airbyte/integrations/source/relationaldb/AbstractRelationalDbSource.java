@@ -7,13 +7,16 @@ package io.airbyte.integrations.source.relationaldb;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.airbyte.commons.util.AutoCloseableIterator;
 import io.airbyte.commons.util.AutoCloseableIterators;
+import io.airbyte.db.jdbc.JdbcDatabase;
 import io.airbyte.db.SqlDatabase;
 import io.airbyte.integrations.base.Source;
 import java.util.List;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /**
  * This class contains helper functions and boilerplate for implementing a source connector for a
@@ -64,6 +67,10 @@ public abstract class AbstractRelationalDbSource<DataType, Database extends SqlD
         throw new RuntimeException(e);
       }
     });
+  }
+
+  protected Set<String> getUnaccessibleTables(JdbcDatabase database, String schema) throws Exception{
+    return Set.of();
   }
 
 }

@@ -105,7 +105,7 @@ public abstract class AbstractJdbcSource extends AbstractRelationalDbSource<JDBC
     return result;
   }
 
-  private String getCatalog(final SqlDatabase database) {
+  protected String getCatalog(final SqlDatabase database) {
     return (database.getSourceConfig().has("database") ? database.getSourceConfig().get("database").asText() : null);
   }
 
@@ -126,7 +126,7 @@ public abstract class AbstractJdbcSource extends AbstractRelationalDbSource<JDBC
             .build()))
         .stream()
         .filter(t -> !internalSchemas.contains(t.get(INTERNAL_SCHEMA_NAME).asText()))
-        .filter (t -> !unaccessibleTables.contains(t.get(INTERNAL_TABLE_NAME).asText()))
+        .filter(t -> !unaccessibleTables.contains(t.get(INTERNAL_TABLE_NAME).asText()))
         // group by schema and table name to handle the case where a table with the same name exists in
         // multiple schemas.
         .collect(Collectors.groupingBy(t -> ImmutablePair.of(t.get(INTERNAL_SCHEMA_NAME).asText(), t.get(INTERNAL_TABLE_NAME).asText())))
